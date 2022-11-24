@@ -1,10 +1,10 @@
 import argparse
-from moviepy.editor import AudioFileClip, ImageClip, VideoClip
+from moviepy.editor import AudioFileClip, ImageClip, VideoClip, concatenate_audioclips
 import scraper
 import os 
 
 
-def createVideo(audio, image, fileSaveName):
+def createVideoTrack(audio, image, fileSaveName):
     print("Creating video for: " + fileSaveName)
     audio_clip = AudioFileClip(audio)
     image_clip = ImageClip(image)
@@ -13,23 +13,51 @@ def createVideo(audio, image, fileSaveName):
     image_clip = image_clip.set_audio(audio_clip)
     image_clip.write_videofile(fileSaveName)
 
+def createVideoAlbum(tracksDir, image, video):
+    print("Creating video for: " + video)
+    tracks = os.listdir(tracksDir)
+    tracks.sort()
+    clips = []
+    for track in tracks:
+        audio_clip = AudioFileClip(tracksDir + "/" + track)
+        clips.append(audio_clip)
+    audio_clip = concatenate_audioclips(clips)
+    image_clip = ImageClip(image)
+    image_clip.duration = audio_clip.duration
+    image_clip.fps = 24
+    image_clip = image_clip.set_audio(audio_clip)
+    image_clip.write_videofile(video)
 
-def mainLinkToVideos(link, output, keep):
+
+def convertAll(output, keep):
     
-    scraper.mainExport(link, output)
     allTitlesRaw = os.listdir(output)
     allTitlesFormatted = []
     for title in allTitlesRaw:
         allTitlesFormatted.append(title.split(".")[0])
     for title in set(allTitlesFormatted):
-        
-        image = output + "/" + title + ".jpg"
-        audio = output + "/" + title + ".wav"
-        video = output + "/" + title + ".mp4"
-        createVideo(audio, image, video)
-        if not keep:
-            os.remove(image)
-            os.remove(audio)
+        # check if track is not already converted
+        if not os.path.exists(output + "/" + title + ".mp4"):
+            if os.path.isdir(output + "/" + title):
+                image = output + "/" + title + ".jpg"
+                tracksDir = output + "/" + title
+                video = output + "/" + title + ".mp4"
+                createVideoAlbum(tracksDir, image, video)
+                if not keep:
+                    os.remove(image)
+                    # delete tracks
+                    for track in os.listdir(tracksDir):
+                        os.remove(tracksDir + "/" + track)
+                    os.rmdir(tracksDir)
+            else:
+                image = output + "/" + title + ".jpg"
+                audio = output + "/" + title + ".wav"
+                video = output + "/" + title + ".mp4"
+                createVideoTrack(audio, image, video)
+                if not keep:
+                    os.remove(image)
+                    os.remove(audio)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -37,4 +65,8 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--output", help="Output directory")
     parser.add_argument("-k", "--keep", help="Keep the audio and image files", required=False, action="store_true")
     args = parser.parse_args()
-    mainLinkToVideos(args.url, args.output, args.keep)
+    if not os.path.exists(args.output):
+        os.makedirs(args.output)
+    scraper.mainExport(args.url, args.output)
+    convertAll(args.output, args.keep)
+
