@@ -61,12 +61,28 @@ def convertAll(output, keep):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-u", "--url", help="URL to the bandcamp page")
-    parser.add_argument("-o", "--output", help="Output directory")
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("-u", "--url", help="URL to the bandcamp page", required=False)
+    group.add_argument("-t", "--track", help="Convert a track", required=False)
+    group.add_argument("-a", "--album", help="Convert an album", required=False)
+    parser.add_argument("-o", "--output", help="Output directory", required=True)
     parser.add_argument("-k", "--keep", help="Keep the audio and image files", required=False, action="store_true")
     args = parser.parse_args()
     if not os.path.exists(args.output):
         os.makedirs(args.output)
-    scraper.mainExport(args.url, args.output)
-    convertAll(args.output, args.keep)
+    if args.track:
+        if not "track" in args.track:
+            print("Invalid track URL")
+            exit()
+        scraper.downloadTrack(args.track, args.output)
+        convertAll(args.output, args.keep)
+    elif args.album:
+        if not "album" in args.album:
+            print("Invalid album URL")
+            exit()
+        scraper.downloadAlbum(args.album, args.output)
+        convertAll(args.output, args.keep)
+    else:
+        scraper.mainExport(args.url, args.output)
+        convertAll(args.output, args.keep)
 

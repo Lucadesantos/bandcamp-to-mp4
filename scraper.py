@@ -23,7 +23,7 @@ def getAllTracksURL(pageURL):
     return trackURLs, albumsURLs
 
 def getTrackInfo(trackURL):
-    print("Getting track info for: " + trackURL)
+    print("Getting track info for: ", trackURL)
     try:
         chromedriver_autoinstaller.install() 
         options = Options()
@@ -62,7 +62,7 @@ def getTrackInfo(trackURL):
         exit()
 
 def downloadTrackData(videoTitle, image, audio, path):
-    print("Downloading track elements for: " + videoTitle)
+    print("Downloading track elements for: ", videoTitle)
     with open(path + "/" + videoTitle + ".jpg", "wb") as f:
         f.write(requests.get(image).content)
     with open(path + "/" + videoTitle + ".wav", "wb") as f:
@@ -82,7 +82,7 @@ def downloadAlbumData(albumTitle, image, tracks, output):
         pos += 1
 
 def getAlbumTracks(URL, output):
-    print("Getting album info for: " + URL)
+    print("Getting album info for: ", URL)
     tracks = []
     titles = []
     try:
@@ -129,14 +129,20 @@ def getAlbumTracks(URL, output):
         driver.quit()
         exit()
 
+def downloadTrack(trackURL, output):
+    videoTitle, image, audio = getTrackInfo(trackURL)
+    downloadTrackData(videoTitle, image, audio, output)
+
+def downloadAlbum(albumURL, output):
+    albumTitle, image, tracks = getAlbumTracks(albumURL, output)
+    downloadAlbumData(albumTitle, image, tracks, output)
+
 def mainExport(pageURL, output):
     print("Starting export")
     trackURLs, albumsURLs = getAllTracksURL(pageURL)
     for trackURL in trackURLs:
-        videoTitle, image, audio = getTrackInfo(trackURL)
-        downloadTrackData(videoTitle, image, audio, output)
+        downloadTrack(trackURL, output)
     for albumURL in albumsURLs:
-        albumTitle, image, tracks = getAlbumTracks(albumURL, output)
-        downloadAlbumData(albumTitle, image, tracks, output)
+        downloadAlbum(albumURL, output)
 
 
