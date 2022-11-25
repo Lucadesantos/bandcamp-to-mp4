@@ -7,16 +7,19 @@ A python script to transform an entire bandcamp library into video files.
   
 ```bc2mp4.py [-h] (-u URL | -t TRACK | -a ALBUM) -o OUTPUT [-k]```
 
-required arguments (one of the three):
+required arguments:
 
   - -u URL, --url URL           URL to the Bandcamp page
+  - OR
   - -t TRACK, --track TRACK     Convert a track
+  - OR
   - -a ALBUM, --album ALBUM     Convert an album
-  
+  - -o OUTPUT, --output OUTPUT  Output directory
+ 
 optional arguments:
 
   - -h, --help                  show this help message and exit
-  - -o OUTPUT, --output OUTPUT  Output directory
+  
   - -k, --keep                  Keep the audio and image source files
 
 ## Required libraries
